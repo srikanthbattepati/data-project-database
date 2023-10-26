@@ -1,7 +1,7 @@
 
 -- 1. Write a SQL script that creates a new user, and database. Make the user the owner of the db.
 
-CREATE DATABASE IPL-PROJECT;
+CREATE DATABASE 'IPL-PROJECT';
 
 
 CREATE USER SRIKANTH WITH PASSWORD 'battepati';
