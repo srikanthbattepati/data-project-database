@@ -21,7 +21,8 @@ DROP DATABASE IF EXISTS IPL-PROJECT ;
 
 
 
--- Create tables
+-- Create Tables.
+
 CREATE TABLE MATCHES(ID int PRIMARY KEY, SEASON int, CITY varchar, DATE date, TEAM1 varchar, TEAM2 varchar, TOSS_WINNER varchar, TOSS_DECISION varchar, RESULT varchar, DL_APPLIED int, WINNER varchar, WIN_BY_RUNS int, WIN_BY_WICKETS int, PLAYER_OF_MATCH varchar, VENUE varchar, UMPIRE1 varchar, UMPIRE2 varchar, UMPIRE3 varchar);
 
 CREATE TABLE DELIVERIES(MATCH_ID int, INNING int, BATTING_TEAM varchar, BOWLING_TEAM varchar, OVER int, BALL int, BATSMAN varchar, NON_STRIKER varchar, BOWLER varchar, IS_SUPER_OVER int, WIDE_RUNS int, BYE_RUNS int, LEGBYE_RUNS int, NOBALL_RUNS int, PENALTY_RUNS int, BATSMAN_RUNS int, EXTRA_RUNS int, TOTAL_RUNS int, PLAYER_DISMISSED varchar, DISMISSAL_KIND varchar, FIELDER varchar);
@@ -32,7 +33,8 @@ REFERENCES MATCHES(ID);
 
 CREATE TABLE UMPIRES (UMPIRE varchar, COUNTRY varchar);
 
--- Import the data from csv files
+-- Import the data from csv files.
+
 COPY MATCHES
 FROM '/var/lib/postgresql/matches.csv'
 DELIMITER ',' CSV HEADER;
@@ -46,12 +48,12 @@ FROM '/var/lib/postgresql/deliveries.csv'
 DELIMITER ',' CSV HEADER;
 
 
--- 1. Total runs scored by team
+-- 1. Total runs scored by team.
 SELECT BATTING_TEAM, SUM(TOTAL_RUNS)
 FROM DELIVERIES
 GROUP BY BATTING_TEAM;
 
--- 2. Top batsman for Royal Challengers Bangalore
+-- 2. Top batsman for Royal Challengers Bangalore.
 SELECT BATSMAN, SUM(BATSMAN_RUNS) AS RUNS
 FROM DELIVERIES
 WHERE BATTING_TEAM = 'Royal Challengers Bangalore'
@@ -59,19 +61,19 @@ GROUP BY BATSMAN
 ORDER BY RUNS DESC
 LIMIT 10;
 
--- 3. Foreign umpire analysis
+-- 3. Foreign umpire analysis.
 SELECT COUNTRY, COUNT(UMPIRE) AS UMPIRE_COUNT
 FROM UMPIRES
 RIGHT JOIN
 	(SELECT UMPIRE1 AS UMPIRE FROM MATCHES
 		WHERE UMPIRE1 IS NOT NULL
 		UNION  
-    SELECT UMPIRE2 AS UMPIRE FROM MATCHES
+    		SELECT UMPIRE2 AS UMPIRE FROM MATCHES
 		WHERE UMPIRE2 IS NOT NULL) AS RESULTS ON UMPIRES.UMPIRE = UMPIRE_LIST.UMPIRE
 WHERE COUNTRY NOT LIKE ' India'
 GROUP BY COUNTRY;
 
--- 4. matches played by team by season
+-- 4. Matches played by team by season.
 SELECT COMBINED.TEAM, COUNT(COMBINED.TEAM) AS RESULTS
 FROM
 	(SELECT TEAM1 AS T
@@ -80,21 +82,21 @@ FROM
 		FROM MATCHES) AS COMBINED
 GROUP BY COMBINED.T;
 
--- 5. Number of matches played per year for all the years
+-- 5. Number of matches played per year for all the years.
 
 SELECT SEASON, COUNT(SEASON) AS RESULTS
 FROM MATCHES
 GROUP BY SEASON
 ORDER BY SEASON;
 
--- 6. Number of matches won per team per year 
+-- 6. Number of matches won per team per year. 
 
 SELECT SEASON, WINNER, COUNT(WINNER)
 FROM MATCHES
 GROUP BY WINNER, SEASON
 ORDER BY SEASON;
 
--- 7. Extra runs conceded per team in the year 2016
+-- 7. Extra runs conceded per team in the year 2016.
 
 SELECT BOWLING_TEAM, SUM(EXTRA_RUNS) AS RESULTS
 FROM DELIVERIES
@@ -103,7 +105,7 @@ WHERE MATCHES.SEASON = '2016' GROUP  BY BOWLING_TEAM
 ORDER BY BOWLING_TEAM;
 
 
--- 8. Top 10 economical bowlers in the year 2015
+-- 8. Top 10 economical bowlers in the year 2015.
 SELECT BAT_RUNS.BOWLER,ROUND((CAST((bat_runs.runs_conceded + extra.runs_conceded) AS DECIMAL(10, 2)) / CAST( bat_runs.balls AS DECIMAL(10, 2))) * 6,2) AS RESULTS
 FROM
 	(SELECT BOWLER, SUM(BATSMAN_RUNS) AS RUNS_CONCEDED, COUNT(BOWLER) AS NO_OF_BALLS
